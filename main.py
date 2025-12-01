@@ -29,10 +29,27 @@ async def get_piste_access_token() -> str:
         # PISTE renvoie un access_token dans sa réponse JSON[web:4][web:11]
         return payload["access_token"]
 
+async def ping_legifrance(access_token: str) -> dict:
+    # Endpoint de test : on utilise simplement la racine avec une requête GET.
+    # On veut juste vérifier que l'API répond avec le token Bearer.
+    url = "https://sandbox-api.piste.gouv.fr/dila/legifrance/lf-engine-app"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/json",
+    }
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url, headers=headers)
+        # On nève pas encore les erreurs pour les voir dans le texte renvoyé
+        return {
+            "status_code": resp.status_code,
+            "body": resp.text[:200],  # on tronque pour rester léger
+        }
 
 async def call_legifrance_article(code: str, article: str, date: Optional[str]) -> dict:
-    # Pour l'instant, on teste juste qu'on obtient un token PISTE
     access_token = await get_piste_access_token()
+
+    # On teste juste que Légifrance répond quelque chose avec ce token.
+    ping_result = await ping_legifrance(access_token)
 
     return {
         "id": "TEST-LEGIARTI",
@@ -40,10 +57,8 @@ async def call_legifrance_article(code: str, article: str, date: Optional[str]) 
         "article": article,
         "date_version": date or "2025-01-01",
         "etat": "VIGUEUR",
-        "texte": f"Token PISTE obtenu (tronqué) : {access_token[:12]}...",
+        "texte": f"Ping Légifrance -> status {ping_result['status_code']}, corps (début) : {ping_result['body']}",
     }
-
-
 
 @app.post("/legifrance/article")
 async def get_legifrance_article(
