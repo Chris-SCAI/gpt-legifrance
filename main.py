@@ -44,6 +44,7 @@ async def call_legifrance_article(code: str, article: str, date: Optional[str]) 
     }
 
 
+
 @app.post("/legifrance/article")
 async def get_legifrance_article(
     code: str,
