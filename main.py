@@ -45,6 +45,17 @@ async def ping_legifrance(access_token: str) -> dict:
             "body": resp.text[:200],  # on tronque pour rester léger
         }
 
+# Petite table de correspondance pour tester (à remplacer par un vrai /search plus tard)
+ARTICLES_CONNUS = {
+    ("civil", "3"): "LEGIARTI000006419282",
+    ("civil", "1832"): "LEGIARTI000006419282",  # placeholder pour l'instant
+    ("civil", "1832-1"): "LEGIARTI000006419282",  # placeholder pour l'instant
+}
+
+def trouver_id_article(code: str, numero: str) -> str:
+    cle = (code.lower(), numero)
+    return ARTICLES_CONNUS.get(cle, "LEGIARTI000006419282")  # défaut si pas trouvé
+
 async def call_legifrance_article(code: str, article: str, date: Optional[str]) -> dict:
     access_token = await get_piste_access_token()
 
@@ -54,8 +65,9 @@ async def call_legifrance_article(code: str, article: str, date: Optional[str]) 
         "Accept": "application/json",
         "Content-Type": "application/json",
     }
+    article_id = trouver_id_article(code, article)
     payload = {
-        "id": "LEGIARTI000006419282"  # article 3 du Code civil dans ton test
+        "id": article_id
     }
 
     async with httpx.AsyncClient() as client:
@@ -71,8 +83,8 @@ async def call_legifrance_article(code: str, article: str, date: Optional[str]) 
 
     return {
         "id": identifiant,
-        "code": "Code civil",
-        "article": "3",
+        "code": f"Code {code}",
+        "article": article,
         "date_version": date or "2025-01-01",
         "etat": "VIGUEUR (sandbox)",
         "texte": texte_brut,
