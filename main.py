@@ -8,7 +8,7 @@ app = FastAPI()
 API_KEY = "change-moi"  # la même valeur que dans l'Action GPT
 
 # PISTE : à configurer avec tes variables d'environnement Render
-PISTE_TOKEN_URL = "https://oauth.piste.gouv.fr/api/oauth/token"  # ou sandbox-oauth si tu es en sandbox
+PISTE_TOKEN_URL = "https://sandbox-oauth.piste.gouv.fr/api/oauth/token"  # ou sandbox-oauth si tu es en sandbox
 PISTE_CLIENT_ID = os.getenv("PISTE_CLIENT_ID", "A_REMPLACER")
 PISTE_CLIENT_SECRET = os.getenv("PISTE_CLIENT_SECRET", "A_REMPLACER")
 PISTE_SCOPE = "openid"
