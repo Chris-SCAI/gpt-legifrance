@@ -48,8 +48,6 @@ async def ping_legifrance(access_token: str) -> dict:
 async def call_legifrance_article(code: str, article: str, date: Optional[str]) -> dict:
     access_token = await get_piste_access_token()
 
-    # Pour l'instant, on ignore code / article / date et on teste un article de démo
-    # avec un identifiant LEGIARTI connu (issu de la doc / de tes tests manuels).
     url = "https://sandbox-api.piste.gouv.fr/dila/legifrance/lf-engine-app/consult/getArticle"
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -57,23 +55,27 @@ async def call_legifrance_article(code: str, article: str, date: Optional[str]) 
         "Content-Type": "application/json",
     }
     payload = {
-        "id": "LEGIARTI000006419282"  # identifiant d'article à tester
+        "id": "LEGIARTI000006419282"  # article 3 du Code civil dans ton test
     }
 
     async with httpx.AsyncClient() as client:
         resp = await client.post(url, headers=headers, json=payload)
 
-    # On renvoie tout ce qu'on peut pour voir ce qui se passe côté Légifrance
-    status = resp.status_code
-    text = resp.text[:400]
+    resp.raise_for_status()
+    data = resp.json()
+
+    # On récupère l'objet article dans la structure retournée
+    art = data.get("article", {})
+    texte_brut = art.get("texte", "")
+    identifiant = art.get("id", payload["id"])
 
     return {
-        "id": "LEGIARTI000006419282",
-        "code": f"Code {code}",
-        "article": article,
+        "id": identifiant,
+        "code": "Code civil",
+        "article": "3",
         "date_version": date or "2025-01-01",
-        "etat": f"HTTP {status}",
-        "texte": f"Réponse Légifrance (tronquée) : {text}",
+        "etat": "VIGUEUR (sandbox)",
+        "texte": texte_brut,
     }
 
 @app.post("/legifrance/article")
