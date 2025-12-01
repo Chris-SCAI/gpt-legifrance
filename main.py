@@ -48,16 +48,32 @@ async def ping_legifrance(access_token: str) -> dict:
 async def call_legifrance_article(code: str, article: str, date: Optional[str]) -> dict:
     access_token = await get_piste_access_token()
 
-    # On teste juste que Légifrance répond quelque chose avec ce token.
-    ping_result = await ping_legifrance(access_token)
+    # Pour l'instant, on ignore code / article / date et on teste un article de démo
+    # avec un identifiant LEGIARTI connu (issu de la doc / de tes tests manuels).
+    url = "https://sandbox-api.piste.gouv.fr/dila/legifrance/lf-engine-app/consult/getArticle"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "id": "LEGIARTI000006419282"  # identifiant d'article à tester
+    }
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(url, headers=headers, json=payload)
+
+    # On renvoie tout ce qu'on peut pour voir ce qui se passe côté Légifrance
+    status = resp.status_code
+    text = resp.text[:400]
 
     return {
-        "id": "TEST-LEGIARTI",
+        "id": "LEGIARTI000006419282",
         "code": f"Code {code}",
         "article": article,
         "date_version": date or "2025-01-01",
-        "etat": "VIGUEUR",
-        "texte": f"Ping Légifrance -> status {ping_result['status_code']}, corps (début) : {ping_result['body']}",
+        "etat": f"HTTP {status}",
+        "texte": f"Réponse Légifrance (tronquée) : {text}",
     }
 
 @app.post("/legifrance/article")
